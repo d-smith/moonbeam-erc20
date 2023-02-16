@@ -1,5 +1,5 @@
 const { expect } = require("chai");
-
+require( "@nomicfoundation/hardhat-chai-matchers" )
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
 const { ethers } = require("hardhat");
 
@@ -74,7 +74,9 @@ describe("Token contract", function() {
             const totalSupply = await myToken.totalSupply();
             await myToken.transfer(addr1.address, 50);
             await myToken.connect(addr1).approve(transporter.address, 10);
-            await transporter.connect(addr1).depositForBurn(5);
+            await expect(transporter.connect(addr1).depositForBurn(5))
+            .to.emit(myToken,"Transfer")
+            .withArgs(addr1.address,ethers.constants.AddressZero, 5);
             const addr1Balance = await myToken.balanceOf(addr1.address);
             expect(Number(addr1Balance)).to.equal(45);
             

@@ -20,3 +20,4 @@ Create the contract:
 *  npm install @openzeppelin/contracts
 * npx hardhat compile
 * npx hardhat run --network dev scripts/deploy.js
+* npm install @nomicfoundation/hardhat-network-helpers
