@@ -16,11 +16,10 @@ describe("Token contract", function() {
 
         const MyToken = await ethers.getContractFactory("MyToken");
         myToken = await MyToken.deploy();
+        await myToken.deployed();
 
         const Transporter = await ethers.getContractFactory("Transporter");
-        transporter = await Transporter.deploy();
-
-        await myToken.deployed();
+        transporter = await Transporter.deploy(myToken.address); 
         await transporter.deployed();
     })
     
@@ -69,8 +68,19 @@ describe("Token contract", function() {
             await  myToken.connect(addr2).transferFrom(addr1.address, addr3.address, 5);
             const addr3Balance = await myToken.balanceOf(addr3.address);
             expect(Number(addr3Balance)).to.equal(5);
+        });
 
-        })
+        it("Allows burning tokens using the allowance", async function() {
+            const totalSupply = await myToken.totalSupply();
+            await myToken.transfer(addr1.address, 50);
+            await myToken.connect(addr1).approve(transporter.address, 10);
+            await transporter.connect(addr1).depositForBurn(5);
+            const addr1Balance = await myToken.balanceOf(addr1.address);
+            expect(Number(addr1Balance)).to.equal(45);
+            
+            const postburnSupply = await myToken.totalSupply();
+            expect(Number(postburnSupply)).to.equal(Number(totalSupply) - 5);
+        });
 
     });
 
