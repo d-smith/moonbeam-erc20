@@ -6,6 +6,7 @@ const { ethers } = require("hardhat");
 describe("Token contract", function() {
 
     let myToken;
+    let transporter;
     let owner;
     let addr1;
     let addr2;
@@ -15,7 +16,12 @@ describe("Token contract", function() {
 
         const MyToken = await ethers.getContractFactory("MyToken");
         myToken = await MyToken.deploy();
+
+        const Transporter = await ethers.getContractFactory("Transporter");
+        transporter = await Transporter.deploy();
+
         await myToken.deployed();
+        await transporter.deployed();
     })
     
 
@@ -47,6 +53,25 @@ describe("Token contract", function() {
             const addr2Balance = await myToken.balanceOf(addr2.address);
             expect(Number(addr2Balance)).to.equal(50);
         });
+    });
+
+    describe("Authorizations", function() {
+        it("Allows granting an allowance to another smart contract", async function() {
+            await myToken.transfer(addr1.address, 50);
+            await myToken.connect(addr1).approve(transporter.address, 10);
+            const allowance = await myToken.allowance(addr1.address, transporter.address);
+            expect(Number(allowance)).to.equal(10);
+        });
+
+        it("Allows transferring tokens using the allowance", async function() {
+            await myToken.transfer(addr1.address, 50);
+            await myToken.connect(addr1).approve(addr2.address, 10);
+            await  myToken.connect(addr2).transferFrom(addr1.address, addr3.address, 5);
+            const addr3Balance = await myToken.balanceOf(addr3.address);
+            expect(Number(addr3Balance)).to.equal(5);
+
+        })
+
     });
 
 });
