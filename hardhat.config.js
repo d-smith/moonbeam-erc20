@@ -6,7 +6,7 @@ const { privateKey } = require('./secrets.json');
 
 module.exports = {
   // 3. Specify the Solidity version
-  solidity: "0.8.9",
+  solidity: "0.8.12",
 
   networks: {
     // 4. Add the Moonbase Alpha network specification
