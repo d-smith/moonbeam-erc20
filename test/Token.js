@@ -3,9 +3,12 @@ require( "@nomicfoundation/hardhat-chai-matchers" )
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
 const { ethers } = require("hardhat");
 
+const ethAddr = '0x892BB2e4F6b14a2B5b82Ba8d33E5925D42D4431F';
+
 describe("Token contract", function() {
 
     let myToken;
+    let message;
     let transporter;
     let owner;
     let addr1;
@@ -14,11 +17,19 @@ describe("Token contract", function() {
     beforeEach(async function() {
         [owner, addr1, addr2, addr3] = await ethers.getSigners();
 
+        const Message = await ethers.getContractFactory("Message");
+        message = await Message.deploy();
+        await message.deployed();
+
         const MyToken = await ethers.getContractFactory("MyToken");
         myToken = await MyToken.deploy();
         await myToken.deployed();
 
-        const Transporter = await ethers.getContractFactory("Transporter");
+        const Transporter = await ethers.getContractFactory("Transporter", {
+            libraries: {
+                Message: message.address,
+            }
+        });
         transporter = await Transporter.deploy(myToken.address); 
         await transporter.deployed();
     })
@@ -71,10 +82,11 @@ describe("Token contract", function() {
         });
 
         it("Allows burning tokens using the allowance", async function() {
+            const ethAccount = await message.addressToBytes32(ethAddr);
             const totalSupply = await myToken.totalSupply();
             await myToken.transfer(addr1.address, 50);
             await myToken.connect(addr1).approve(transporter.address, 10);
-            await expect(transporter.connect(addr1).depositForBurn(5))
+            await expect(transporter.connect(addr1).depositForBurn(5,ethAccount))
             .to.emit(myToken,"Transfer")
             .withArgs(addr1.address,ethers.constants.AddressZero, 5);
             const addr1Balance = await myToken.balanceOf(addr1.address);
